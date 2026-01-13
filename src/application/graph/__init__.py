@@ -127,11 +127,11 @@ class ConversationGraph:
             updates["clarification_count"] = new_count
 
             # Check if limit exceeded
-            if new_count >= self.settings.max_clarifications:
+            if new_count > self.settings.max_clarifications:
                 updates["handover_to_human_needed"] = True
                 # Add message informing about handover
-                handover_msg = "\n\n⚠️ I will forward your ticket to a human specialist who can help you better."
-                updates["agent_response"] = state["agent_response"] + handover_msg
+                # handover_msg = "\n\n⚠️ I will forward your ticket to a human specialist who can help you better."
+                updates["agent_response"] = state["agent_response"]
 
         # Add agent response to messages (use the updated response if available)
         response = updates.get("agent_response", state["agent_response"])
@@ -186,6 +186,7 @@ class ConversationGraph:
 
         # Update conversation with results
         conversation.add_agent_message(final_state["agent_response"])
+        conversation.add_messages_to_history(final_state["messages"])
         conversation.clarification_count = final_state["clarification_count"]
         conversation.handover_to_human_needed = final_state["handover_to_human_needed"]
 

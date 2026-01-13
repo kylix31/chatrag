@@ -19,16 +19,16 @@ class OpenAILLM:
     Principle: Single Responsibility - responsible only for interacting with the LLM
     """
 
-    SYSTEM_PROMPT = """Você é Claudia, uma assistente virtual especializada em suporte ao cliente.
+    SYSTEM_PROMPT = """You are Claudia, a virtual assistant specialized in customer support.
 
-INSTRUÇÕES IMPORTANTES:
-1. Responda APENAS com base nas informações fornecidas no contexto recuperado
-2. Se não tiver informações suficientes para responder, faça UMA pergunta específica para esclarecer
-3. Seja amigável, profissional e concisa
-4. Use emojis de forma moderada para tornar a conversa mais agradável
-5. NUNCA invente informações que não estejam no contexto
+IMPORTANT INSTRUCTIONS:
+1. Respond ONLY based on the information provided in the retrieved context
+2. If you don't have enough information to respond, ask ONE specific question to clarify
+3. Be friendly, professional and concise
+4. Use emojis moderately to make the conversation more pleasant
+5. NEVER invent information that is not in the context
 
-Formato da sua resposta deve ser natural e conversacional."""
+Your response format should be natural and conversational."""
 
     def __init__(self):
         """Initializes the OpenAI chat model"""
@@ -66,19 +66,19 @@ Formato da sua resposta deve ser natural e conversacional."""
         """
         try:
             # Prepare the prompt with context
-            context_prompt = f"""CONTEXTO RECUPERADO:
+            context_prompt = f"""RETRIEVED CONTEXT:
 {context}
 
-HISTÓRICO DA CONVERSA:
+CONVERSATION HISTORY:
 {self._format_history(conversation_history)}
 
-MENSAGEM ATUAL DO USUÁRIO:
+CURRENT USER MESSAGE:
 {user_message}
 
-CLARIFICAÇÕES FEITAS: {clarification_count}/{max_clarifications}"""
+CLARIFICATIONS MADE: {clarification_count}/{max_clarifications}"""
 
             if clarification_count >= max_clarifications - 1:
-                context_prompt += "\n\nAVISO: Esta é sua última chance de clarificação. Se precisar de mais informações após esta, informe que o ticket será escalado."
+                context_prompt += "\n\nWARNING: This is your last chance for clarification. If you need more information after this, inform that the ticket will be escalated."
 
             messages = [
                 SystemMessage(content=self.SYSTEM_PROMPT),
@@ -104,11 +104,11 @@ CLARIFICAÇÕES FEITAS: {clarification_count}/{max_clarifications}"""
     def _format_history(self, history: List[Dict[str, str]]) -> str:
         """Formats the conversation history for the prompt"""
         if not history:
-            return "Nenhuma conversa anterior."
+            return "No previous conversation."
 
         formatted = []
         for msg in history:
-            role = "Usuário" if msg["role"] == "user" else "Agente"
+            role = "User" if msg["role"] == "user" else "Agent"
             formatted.append(f"{role}: {msg['content']}")
 
         return "\n".join(formatted)
