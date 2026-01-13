@@ -1,6 +1,6 @@
 """
 Domain Layer - Models
-Define as entidades de domínio seguindo princípios de DDD
+Defines domain entities following DDD principles
 """
 
 from enum import Enum
@@ -10,21 +10,21 @@ from pydantic import BaseModel, Field
 
 
 class MessageRole(str, Enum):
-    """Roles das mensagens no chat"""
+    """Chat message roles"""
 
     USER = "USER"
     AGENT = "AGENT"
 
 
 class Message(BaseModel):
-    """Entidade Message - representa uma mensagem na conversa"""
+    """Message Entity - represents a message in the conversation"""
 
     role: MessageRole
     content: str
 
 
 class RetrievedSection(BaseModel):
-    """Value Object - representa uma seção recuperada do vector store"""
+    """Value Object - represents a section retrieved from the vector store"""
 
     score: float
     content: str
@@ -32,8 +32,8 @@ class RetrievedSection(BaseModel):
 
 class ConversationState(BaseModel):
     """
-    Aggregate Root - representa o estado completo de uma conversa
-    Encapsula toda a lógica de negócio relacionada à conversa
+    Aggregate Root - represents the complete state of a conversation
+    Encapsulates all business logic related to the conversation
     """
 
     helpdesk_id: int
@@ -44,28 +44,28 @@ class ConversationState(BaseModel):
     clarification_count: int = 0
 
     def add_user_message(self, content: str) -> None:
-        """Adiciona uma mensagem do usuário"""
+        """Adds a user message"""
         self.messages.append(Message(role=MessageRole.USER, content=content))
 
     def add_agent_message(self, content: str) -> None:
-        """Adiciona uma mensagem do agente"""
+        """Adds an agent message"""
         self.messages.append(Message(role=MessageRole.AGENT, content=content))
 
     def increment_clarification(self, max_clarifications: int = 2) -> None:
         """
-        Incrementa o contador de clarificações e marca para handover se exceder o limite
-        Business Rule: Máximo de 2 clarificações por conversa
+        Increments the clarification counter and marks for handover if limit is exceeded
+        Business Rule: Maximum of 2 clarifications per conversation
         """
         self.clarification_count += 1
         if self.clarification_count >= max_clarifications:
             self.handover_to_human_needed = True
 
     def add_retrieved_sections(self, sections: List[RetrievedSection]) -> None:
-        """Adiciona as seções recuperadas do RAG"""
+        """Adds the sections retrieved from RAG"""
         self.sections_retrieved = sections
 
     def get_conversation_history(self) -> List[dict]:
-        """Retorna o histórico de conversa formatado para o LLM"""
+        """Returns the conversation history formatted for the LLM"""
         return [
             {"role": msg.role.value.lower(), "content": msg.content}
             for msg in self.messages
