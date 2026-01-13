@@ -27,7 +27,6 @@ INSTRUÇÕES IMPORTANTES:
 3. Seja amigável, profissional e concisa
 4. Use emojis de forma moderada para tornar a conversa mais agradável
 5. NUNCA invente informações que não estejam no contexto
-6. Se precisar de mais de 2 clarificações, informe que o ticket será escalado para um especialista humano
 
 Formato da sua resposta deve ser natural e conversacional."""
 
