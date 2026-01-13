@@ -13,17 +13,14 @@ class Settings(BaseSettings):
     Principle: Separation of Concerns - configuration isolated from business logic
     """
 
-    # OpenAI Configuration
     openai_api_key: str = Field(...)
     openai_embedding_model: str = "text-embedding-3-large"
     openai_chat_model: str = "gpt-4o-mini"
 
-    # Azure AI Search Configuration
     azure_search_endpoint: str = Field(...)
     azure_search_key: str = Field(...)
     azure_search_index_name: str = Field(...)
 
-    # Application Configuration
     app_host: str = "0.0.0.0"
     app_port: int = 8000
     max_clarifications: int = 2
