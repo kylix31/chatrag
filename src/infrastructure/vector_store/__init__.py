@@ -5,7 +5,9 @@ Implements the interface with Azure AI Search for document retrieval
 
 from typing import List
 
-from langchain_community.vectorstores.azuresearch import AzureSearch
+from azure.core.credentials import AzureKeyCredential
+from azure.search.documents import SearchClient
+from azure.search.documents.models import VectorizedQuery
 from langchain_openai import OpenAIEmbeddings
 from pydantic import SecretStr
 
@@ -29,11 +31,12 @@ class AzureAISearchVectorStore:
                 model=settings.openai_embedding_model,
             )
 
-            self.vector_store = AzureSearch(
-                azure_search_endpoint=settings.azure_search_endpoint,
-                azure_search_key=settings.azure_search_key,
+            # Initialize Azure Search client
+            credential = AzureKeyCredential(settings.azure_search_key)
+            self.search_client = SearchClient(
+                endpoint=settings.azure_search_endpoint,
                 index_name=settings.azure_search_index_name,
-                embedding_function=self.embeddings.embed_query,
+                credential=credential,
             )
 
         except Exception as e:
@@ -54,21 +57,37 @@ class AzureAISearchVectorStore:
             List of retrieved sections with score
         """
         try:
-            # Build filter expression for Azure AI Search
-            filters = None
-            if project_name:
-                filters = f"projectName eq '{project_name}'"
+            # Generate embeddings for the query
+            query_vector = self.embeddings.embed_query(query)
 
-            # Performs the search using LangChain retriever with filters
-            results = self.vector_store.similarity_search_with_relevance_scores(
-                query=query, k=k, filters=filters
+            # Build filter expression for Azure AI Search
+            filter_expression = None
+            if project_name:
+                filter_expression = f"projectName eq '{project_name}'"
+
+            # Build vector query using VectorizedQuery
+            vector_query = VectorizedQuery(
+                vector=query_vector,
+                k_nearest_neighbors=k,
+                fields="embeddings",
             )
 
-            # Converts to domain format
-            sections = [
-                RetrievedSection(score=score, content=doc.page_content)
-                for doc, score in results
-            ]
+            # Perform vector search using Azure Search SDK
+            results = self.search_client.search(
+                search_text=None,
+                vector_queries=[vector_query],
+                filter=filter_expression,
+                select=["content", "type"],
+                top=k,
+            )
+
+            # Convert to domain format
+            sections = []
+            for result in results:
+                # Azure Cognitive Search returns @search.score
+                score = result.get("@search.score", 0.0)
+                content = result.get("content", "")
+                sections.append(RetrievedSection(score=score, content=content))
 
             return sections
 
