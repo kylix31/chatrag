@@ -12,4 +12,6 @@ dependencies = [
   "pydantic>=2.10.0",
   "pydantic-settings>=2.6.0",
   "fastapi[standard]>=0.128.0",
+  "azure-search-documents>=11.6.0",
+  "azure-identity>=1.25.1",
 ]
