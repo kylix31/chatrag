@@ -78,9 +78,12 @@ class ConversationGraph:
         Node 1: Retrieves context from vector store
         """
         query = state["current_query"]
+        project_name = state.get("project_name")
 
-        # Search for relevant sections
-        sections = self.vector_store.similarity_search(query, k=5)
+        # Search for relevant sections with project filter
+        sections = self.vector_store.similarity_search(
+            query, k=5, project_name=project_name
+        )
 
         # Format the context
         context = "\n\n".join(
