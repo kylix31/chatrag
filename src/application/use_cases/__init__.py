@@ -74,12 +74,4 @@ class ProcessConversationUseCase:
             else:
                 conversation.add_agent_message(content)
 
-        # Calculate how many clarifications have already been made
-        clarifications = sum(
-            1
-            for msg in conversation.messages
-            if msg.role == MessageRole.AGENT and "?" in msg.content
-        )
-        conversation.clarification_count = clarifications
-
         return conversation
