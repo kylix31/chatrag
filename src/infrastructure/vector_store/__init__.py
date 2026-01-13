@@ -39,21 +39,29 @@ class AzureAISearchVectorStore:
         except Exception as e:
             raise VectorStoreException(f"Error initializing Azure AI Search: {str(e)}")
 
-    def similarity_search(self, query: str, k: int = 5) -> List[RetrievedSection]:
+    def similarity_search(
+        self, query: str, k: int = 5, project_name: str | None = None
+    ) -> List[RetrievedSection]:
         """
-        Performs similarity search in the vector store
+        Performs similarity search in the vector store with optional project filter
 
         Args:
             query: User query
             k: Number of documents to return
+            project_name: Optional project name to filter results (e.g., 'tesla_motors')
 
         Returns:
             List of retrieved sections with score
         """
         try:
-            # Performs the search using LangChain retriever
+            # Build filter expression for Azure AI Search
+            filters = None
+            if project_name:
+                filters = f"projectName eq '{project_name}'"
+
+            # Performs the search using LangChain retriever with filters
             results = self.vector_store.similarity_search_with_relevance_scores(
-                query=query, k=k
+                query=query, k=k, filters=filters
             )
 
             # Converts to domain format
