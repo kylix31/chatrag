@@ -69,46 +69,40 @@ class ConversationGraph:
         workflow.add_edge("generate_response", "check_clarification")
         workflow.add_edge("check_clarification", END)
 
-        # Compile the graph with checkpointer for memory
         memory = MemorySaver()
         return workflow.compile(checkpointer=memory)
 
-    def _retrieve_context(self, state: GraphState) -> GraphState:
+    def _retrieve_context(self, state: GraphState) -> dict:
         """
         Node 1: Retrieves context from vector store
         """
         query = state["current_query"]
         project_name = state.get("project_name")
 
-        # Search for relevant sections with project filter
         sections = self.vector_store.similarity_search(
             query, k=5, project_name=project_name
         )
 
-        # Format the context
         context = "\n\n".join(
             [f"[Score: {section.score:.4f}]\n{section.content}" for section in sections]
         )
 
-        # Update the state
-        state["retrieved_context"] = context
-        state["sections_retrieved"] = [
-            {"score": s.score, "content": s.content} for s in sections
-        ]
+        return {
+            "retrieved_context": context,
+            "sections_retrieved": [
+                {"score": s.score, "content": s.content} for s in sections
+            ],
+        }
 
-        return state
-
-    def _generate_response(self, state: GraphState) -> GraphState:
+    def _generate_response(self, state: GraphState) -> dict:
         """
         Node 2: Generates agent response using the LLM
         """
         user_message = state["current_query"]
         context = state["retrieved_context"]
 
-        # Prepare conversation history (exclude current message)
         history = state.get("messages", [])[:-1] if state.get("messages") else []
 
-        # Generate response
         response, is_clarification = self.llm.generate_response(
             user_message=user_message,
             context=context,
@@ -117,30 +111,33 @@ class ConversationGraph:
             max_clarifications=self.settings.max_clarifications,
         )
 
-        # Update the state
-        state["agent_response"] = response
-        state["is_clarification"] = is_clarification
+        return {
+            "agent_response": response,
+            "is_clarification": is_clarification,
+        }
 
-        return state
-
-    def _check_clarification(self, state: GraphState) -> GraphState:
+    def _check_clarification(self, state: GraphState) -> dict:
         """
         Node 3: Checks if it was a clarification and updates counter
         """
+        updates = {}
+
         if state["is_clarification"]:
-            state["clarification_count"] += 1
+            new_count = state["clarification_count"] + 1
+            updates["clarification_count"] = new_count
 
             # Check if limit exceeded
-            if state["clarification_count"] >= self.settings.max_clarifications:
-                state["handover_to_human_needed"] = True
+            if new_count >= self.settings.max_clarifications:
+                updates["handover_to_human_needed"] = True
                 # Add message informing about handover
                 handover_msg = "\n\n⚠️ I will forward your ticket to a human specialist who can help you better."
-                state["agent_response"] += handover_msg
+                updates["agent_response"] = state["agent_response"] + handover_msg
 
-        # Add agent response to messages
-        state["messages"].append({"role": "agent", "content": state["agent_response"]})
+        # Add agent response to messages (use the updated response if available)
+        response = updates.get("agent_response", state["agent_response"])
+        updates["messages"] = [{"role": "agent", "content": response}]
 
-        return state
+        return updates
 
     def process_conversation(
         self, conversation: ConversationState
@@ -157,7 +154,16 @@ class ConversationGraph:
         # Get the last user message
         last_message = conversation.messages[-1]
 
-        # Prepare initial graph state
+        # Execute the graph with config
+        config: RunnableConfig = {
+            "configurable": {"thread_id": str(conversation.helpdesk_id)}
+        }
+
+        # Get the current state from checkpoint to preserve clarification_count
+        current_state = self.graph.get_state(config)
+        state_values = current_state.values or {}
+
+        # For fields without reducers, we must preserve checkpoint values or they'll be overridden
         initial_state: GraphState = {
             "helpdesk_id": conversation.helpdesk_id,
             "project_name": conversation.project_name,
@@ -168,16 +174,14 @@ class ConversationGraph:
             "current_query": last_message.content,
             "retrieved_context": "",
             "sections_retrieved": [],
-            "clarification_count": conversation.clarification_count,
-            "handover_to_human_needed": conversation.handover_to_human_needed,
+            "clarification_count": state_values.get("clarification_count", 0),
+            "handover_to_human_needed": state_values.get(
+                "handover_to_human_needed", False
+            ),
             "agent_response": "",
             "is_clarification": False,
         }
 
-        # Execute the graph
-        config: RunnableConfig = {
-            "configurable": {"thread_id": str(conversation.helpdesk_id)}
-        }
         final_state = self.graph.invoke(initial_state, config)
 
         # Update conversation with results
