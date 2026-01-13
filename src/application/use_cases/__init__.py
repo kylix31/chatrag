@@ -14,9 +14,9 @@ class ProcessConversationUseCase:
     Principle: Single Responsibility - orchestrates business logic
     """
 
-    def __init__(self):
+    def __init__(self, conversation_graph: ConversationGraph):
         """Initializes the use case with necessary dependencies"""
-        self.conversation_graph = ConversationGraph()
+        self.conversation_graph = conversation_graph
 
     def execute(
         self, helpdesk_id: int, project_name: str, messages: list[dict]

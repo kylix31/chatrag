@@ -3,7 +3,7 @@ API Layer - Routes
 Define the REST API routes
 """
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from src.api.schemas import (
     ConversationRequest,
@@ -12,7 +12,7 @@ from src.api.schemas import (
     MessageResponse,
     SectionRetrievedResponse,
 )
-from src.application import ProcessConversationUseCase
+from src.application import ConversationGraph, ProcessConversationUseCase
 from src.domain import (
     DomainException,
     InvalidMessageException,
@@ -21,6 +21,16 @@ from src.domain import (
 )
 
 router = APIRouter()
+
+
+def get_conversation_graph() -> ConversationGraph:
+    """
+    Dependency to get the conversation graph instance.
+    Import here to avoid circular imports.
+    """
+    from main import get_conversation_graph as _get_graph
+
+    return _get_graph()
 
 
 @router.post(
@@ -42,19 +52,23 @@ router = APIRouter()
     4. Escalate to human if more than 2 clarifications are needed
     """,
 )
-async def process_conversation(request: ConversationRequest) -> ConversationResponse:
+async def process_conversation(
+    request: ConversationRequest,
+    graph: ConversationGraph = Depends(get_conversation_graph),
+) -> ConversationResponse:
     """
     Main endpoint to process conversations with RAG
 
     Args:
         request: Conversation data (helpdeskId, projectName, messages)
+        graph: Injected ConversationGraph instance
 
     Returns:
         Updated conversation with agent response and retrieved sections
     """
     try:
-        # Execute the use case
-        use_case = ProcessConversationUseCase()
+        # Execute the use case with the shared graph instance
+        use_case = ProcessConversationUseCase(conversation_graph=graph)
 
         conversation = use_case.execute(
             helpdesk_id=request.helpdeskId,
