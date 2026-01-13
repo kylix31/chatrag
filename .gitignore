@@ -27,3 +27,7 @@ htmlcov/
 
 # Logs
 *.log
+
+# LangGraph checkpoints
+checkpoints.db
+checkpoints.db-*
