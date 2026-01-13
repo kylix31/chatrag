@@ -39,6 +39,7 @@ class ConversationState(BaseModel):
     helpdesk_id: int
     project_name: str
     messages: List[Message] = Field(default_factory=list)
+    message_id_history: List[Message] = Field(default_factory=list)
     handover_to_human_needed: bool = False
     sections_retrieved: List[RetrievedSection] = Field(default_factory=list)
     clarification_count: int = 0
@@ -63,6 +64,18 @@ class ConversationState(BaseModel):
     def add_retrieved_sections(self, sections: List[RetrievedSection]) -> None:
         """Adds the sections retrieved from RAG"""
         self.sections_retrieved = sections
+
+    def add_messages_to_history(self, messages: List[dict]) -> None:
+        """Adds messages from graph final_state to message_id_history"""
+        for msg_dict in messages:
+            role = (
+                MessageRole.USER
+                if msg_dict["role"].upper() == "USER"
+                else MessageRole.AGENT
+            )
+            self.message_id_history.append(
+                Message(role=role, content=msg_dict["content"])
+            )
 
     def get_conversation_history(self) -> List[dict]:
         """Returns the conversation history formatted for the LLM"""

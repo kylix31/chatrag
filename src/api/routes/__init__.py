@@ -82,6 +82,10 @@ async def process_conversation(
                 MessageResponse(role=msg.role.value, content=msg.content)
                 for msg in conversation.messages
             ],
+            messagesHistoryById=[
+                MessageResponse(role=msg.role.value, content=msg.content)
+                for msg in conversation.message_id_history
+            ],
             handoverToHumanNeeded=conversation.handover_to_human_needed,
             sectionsRetrieved=[
                 SectionRetrievedResponse(score=section.score, content=section.content)
