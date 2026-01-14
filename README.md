@@ -19,6 +19,7 @@ ______________________________________________________________________
 - [Sobre o Projeto](#-sobre-o-projeto)
 - [Características](#-caracter%C3%ADsticas)
 - [Arquitetura](#-arquitetura)
+- [Decisões Técnicas](#-decis%C3%B5es-t%C3%A9cnicas)
 - [Tecnologias](#-tecnologias)
 - [Pré-requisitos](#-pr%C3%A9-requisitos)
 - [Instalação](#-instala%C3%A7%C3%A3o)
@@ -28,6 +29,7 @@ ______________________________________________________________________
 - [API Endpoints](#-api-endpoints)
 - [Desenvolvimento](#-desenvolvimento)
 - [Docker](#-docker)
+- [Contribuindo](#-contribuindo)
 - [Licença](#-licen%C3%A7a)
 
 ______________________________________________________________________
@@ -187,6 +189,38 @@ O **LangGraph** complementa o LangChain trazendo:
 - Separação de build e runtime
 - Health checks integrados
 - Fácil deploy em qualquer ambiente
+
+#### **Sistema de Clarificação Inteligente**
+
+O sistema implementa um mecanismo sofisticado de clarificação:
+
+**Como Funciona:**
+
+1. O LLM analisa a pergunta do usuário e o contexto recuperado
+1. Se a informação for insuficiente, o agente responde com uma **contra-pergunta**
+1. O sistema rastreia o contador de clarificações para cada conversa
+1. Após o limite (padrão: 2 clarificações), a conversa é escalada para humano
+
+**Vantagens:**
+
+- ✅ Evita respostas genéricas ou imprecisas
+- ✅ Coleta informações específicas antes de responder
+- ✅ Melhora a satisfação do usuário com respostas mais precisas
+- ✅ Previne loops infinitos de perguntas
+- ✅ Handover inteligente para atendimento humano quando necessário
+
+**Exemplo de Fluxo:**
+
+```
+Usuário: "Meu sistema está lento"
+Agente: "Para te ajudar melhor, qual parte do sistema está apresentando lentidão? 
+         É no login, na dashboard, ou em outra funcionalidade específica?"
+         [clarification_count: 1]
+
+Usuário: "Na dashboard"
+Agente: "Entendi! A lentidão na dashboard pode ser causada por... [resposta completa]"
+         [clarification_count: 1, resposta final]
+```
 
 ______________________________________________________________________
 
