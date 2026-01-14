@@ -44,7 +44,6 @@ class ConversationResponse(BaseModel):
     """DTO for conversation response"""
 
     messages: List[MessageResponse]
-    messagesHistoryById: List[MessageResponse]
     handoverToHumanNeeded: bool = Field(..., alias="handoverToHumanNeeded")
     sectionsRetrieved: List[SectionRetrievedResponse] = Field(
         ..., alias="sectionsRetrieved"

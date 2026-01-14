@@ -185,7 +185,7 @@ class ConversationGraph:
         final_state = self.graph.invoke(initial_state, config)
 
         # Update conversation with results
-        conversation.add_agent_message(final_state["agent_response"])
+        # conversation.add_agent_message(final_state["agent_response"])
         conversation.add_messages_to_history(final_state["messages"])
         conversation.clarification_count = final_state["clarification_count"]
         conversation.handover_to_human_needed = final_state["handover_to_human_needed"]

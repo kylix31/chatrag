@@ -34,6 +34,10 @@ class ConversationState(BaseModel):
     """
     Aggregate Root - represents the complete state of a conversation
     Encapsulates all business logic related to the conversation
+    
+    NOTE: This class is only to demonstrate the encapsulation of business logic.
+    Due to time development constraints, the main database is orchestrated using 
+    the LangGraph MemorySave logic.
     """
 
     helpdesk_id: int
