@@ -404,10 +404,16 @@ ______________________________________________________________________
 
 - **POST /conversations** - Enviar mensagem e receber resposta
   ```json
-  {
-    "message": "string",
-    "conversation_id": "string (opcional)"
-  }
+    {
+      "helpdeskId": 20,
+      "projectName": "tesla_motors",
+      "messages": [
+        {
+          "role": "USER",
+          "content": "Hi! What's the autonomy of a Tesla car?"
+        }
+      ]
+    }
   ```
 
 ### Documentação
