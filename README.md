@@ -301,7 +301,7 @@ cp .env.example .env
 ```env
 # OpenAI Configuration
 OPENAI_API_KEY=sk-your-openai-api-key
-OPENAI_EMBEDDING_MODEL=text-embedding-ada-002
+OPENAI_EMBEDDING_MODEL=text-embedding-3-large
 OPENAI_CHAT_MODEL=gpt-4
 
 # Azure AI Search Configuration
@@ -320,7 +320,7 @@ MAX_CLARIFICATIONS=2
 | Variável | Descrição | Padrão |
 |----------|-----------|--------|
 | `OPENAI_API_KEY` | Chave da API OpenAI | *Obrigatório* |
-| `OPENAI_EMBEDDING_MODEL` | Modelo de embeddings | `text-embedding-ada-002` |
+| `OPENAI_EMBEDDING_MODEL` | Modelo de embeddings | `text-embedding-3-large` |
 | `OPENAI_CHAT_MODEL` | Modelo de chat | `gpt-4` |
 | `AZURE_SEARCH_ENDPOINT` | Endpoint do Azure AI Search | *Obrigatório* |
 | `AZURE_SEARCH_KEY` | Chave de acesso do Azure Search | *Obrigatório* |
